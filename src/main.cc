@@ -1,12 +1,21 @@
+// Options class
 // https://gist.github.com/ksimek/4a2814ba7d74f778bbee
+// boost::log
+// boost::log tutorial
+
 #include <boost/program_options.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <iterator>
 #include <algorithm>
+#include <string>
+#include <cstdint>
 
-
+namespace logging = boost::log;
 namespace po = boost::program_options;
 class Options
 {
@@ -19,7 +28,8 @@ public:
             ("help", "Display help message")
             ("config", po::value(&config_fnames), "Config file where options may be specified (can be specified more than once)")
             ("threshold,t", po::value<double>(&threshold)->default_value(0.25), "Threshold value")
-            ("negate-threshold,t", po::bool_switch(&negate_threshold), "Negate threshold")
+            ("optional,o", po::bool_switch(&optional_flag), "Optional flag")
+            ("log-level,l", po::value(&log_level), "trace, debug, info, warning, error (default) or fatel")
         ;
 
         po::options_description hidden;
@@ -65,6 +75,12 @@ public:
             }
         }
 
+        if(vm.count("log-level"))
+            set_log_level(vm["log-level"].as<std::string>());
+        else
+            set_log_level("error");
+
+
 
         po::notify(vm);
 
@@ -72,6 +88,33 @@ public:
     }
 
 private:
+    // https://stackoverflow.com/a/19123540/1704566
+    static inline constexpr unsigned const_hash(char const *input, unsigned hash = 5381) {
+        return *input ?
+            const_hash(input + 1, hash * 33 + static_cast<unsigned>(*input)): 
+            hash;
+    }
+
+    void set_log_level(const std::string &level)
+    {
+        switch (const_hash(level.c_str())) {
+            case const_hash("trace"):
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::trace); break;
+            case const_hash("debug"):
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::debug); break;
+            case const_hash("info"):
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::info); break;
+            case const_hash("warning"):
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::warning); break;
+            case const_hash("error"):
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::error); break;
+            case const_hash("fatal"):
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::fatal); break;
+            default:
+                logging::core::get()->set_filter(logging::trivial::severity >= logging::trivial::error); break;
+        }
+    }
+
     std::string basename_(const std::string& p)
     {
 #ifdef HAVE_BOOST_FILESYSTEM
@@ -148,7 +191,8 @@ private:
 public:
     std::string fname;
     double threshold;
-    bool negate_threshold;
+    bool optional_flag;
+    std::string log_level;
 };
 Options options;
 
@@ -158,6 +202,12 @@ int main(int argc, char** argv)
         return 1;
 
     std::cout << options.fname << std::endl;
+    BOOST_LOG_TRIVIAL(trace) << "A trace severity message";
+    BOOST_LOG_TRIVIAL(debug) << "A debug severity message";
+    BOOST_LOG_TRIVIAL(info) << "An informational severity message";
+    BOOST_LOG_TRIVIAL(warning) << "A warning severity message";
+    BOOST_LOG_TRIVIAL(error) << "An error severity message";
+    BOOST_LOG_TRIVIAL(fatal) << "A fatal severity message";
 
     return 0;
 }
