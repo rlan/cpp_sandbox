@@ -1,4 +1,4 @@
-CPP Sandbox
+CPP Sandbox  [![Build Status](https://travis-ci.org/rlan/cpp_sandbox.svg?branch=master)](https://travis-ci.org/rlan/cpp_sandbox)
 ============
 
 This package is a command-line starter program. It uses boost::program_options
