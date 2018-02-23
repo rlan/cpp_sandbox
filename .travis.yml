@@ -1,0 +1,13 @@
+language: cpp
+
+compiler: gcc
+
+script:
+- ./build.sh
+- ./build/sandbox hello
+
+after_failure:
+- cmake --version
+- gcc --version
+- g++ --version
+- cat ./build.sh
