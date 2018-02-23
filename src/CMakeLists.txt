@@ -3,6 +3,8 @@ project (sandbox CXX)
 
 set (CMAKE_CXX_STANDARD 14)
 
+# https://stackoverflow.com/questions/31641063/single-threaded-application-with-boost-and-cmake
+set(Boost_USE_MULTITHREADED OFF)
 find_package(Boost 1.48.0 REQUIRED COMPONENTS
               filesystem program_options log)
 
